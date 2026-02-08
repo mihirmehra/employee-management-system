@@ -1,124 +1,176 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { getCollection, ObjectId } from '@/lib/mongodb'
+import { getCollection, ObjectId, isMongoConfigured } from '@/lib/mongodb'
 import { getSession } from '@/lib/auth'
 import type { Shift } from '@/lib/types'
 
-export async function createShift(formData: FormData) {
+export type { Shift }
+
+export async function createShift(data: {
+  name: string
+  type: Shift['type']
+  startTime: string
+  endTime: string
+  breakDuration: number
+  graceMinutes: number
+  isActive: boolean
+}) {
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured' }
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
-    return { error: 'Unauthorized' }
+    return { success: false, error: 'Unauthorized' }
   }
 
-  const name = formData.get('name') as string
-  const type = formData.get('type') as Shift['type']
-  const startTime = formData.get('startTime') as string
-  const endTime = formData.get('endTime') as string
-  const breakDuration = parseInt(formData.get('breakDuration') as string) || 60
-  const workingDays = formData.getAll('workingDays').map(d => parseInt(d as string))
-
-  if (!name || !startTime || !endTime) {
-    return { error: 'Name, start time, and end time are required' }
+  if (!data.name || !data.startTime || !data.endTime) {
+    return { success: false, error: 'Name, start time, and end time are required' }
   }
 
-  const shifts = await getCollection<Shift>('shifts')
-  
-  await shifts.insertOne({
-    name,
-    type: type || 'flexible',
-    startTime,
-    endTime,
-    breakDuration,
-    workingDays: workingDays.length > 0 ? workingDays : [1, 2, 3, 4, 5],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  })
+  try {
+    const shifts = await getCollection<Shift>('shifts')
+    
+    await shifts.insertOne({
+      name: data.name,
+      type: data.type || 'day',
+      startTime: data.startTime,
+      endTime: data.endTime,
+      breakDuration: data.breakDuration || 60,
+      graceMinutes: data.graceMinutes || 15,
+      workingDays: [1, 2, 3, 4, 5],
+      isActive: data.isActive !== false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as Shift)
 
-  revalidatePath('/dashboard/shifts')
-  return { success: true }
+    revalidatePath('/dashboard/shifts')
+    return { success: true }
+  } catch (error) {
+    console.error('Error creating shift:', error)
+    return { success: false, error: 'Failed to create shift' }
+  }
 }
 
-export async function updateShift(id: string, formData: FormData) {
-  const session = await getSession()
-  if (!session || !['admin', 'hr'].includes(session.user.role)) {
-    return { error: 'Unauthorized' }
+export async function updateShift(id: string, data: {
+  name: string
+  type: Shift['type']
+  startTime: string
+  endTime: string
+  breakDuration: number
+  graceMinutes: number
+  isActive: boolean
+}) {
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured' }
   }
 
-  const name = formData.get('name') as string
-  const type = formData.get('type') as Shift['type']
-  const startTime = formData.get('startTime') as string
-  const endTime = formData.get('endTime') as string
-  const breakDuration = parseInt(formData.get('breakDuration') as string) || 60
-  const workingDays = formData.getAll('workingDays').map(d => parseInt(d as string))
-  const isActive = formData.get('isActive') === 'true'
+  const session = await getSession()
+  if (!session || !['admin', 'hr'].includes(session.user.role)) {
+    return { success: false, error: 'Unauthorized' }
+  }
 
-  const shifts = await getCollection<Shift>('shifts')
-  
-  await shifts.updateOne(
-    { _id: new ObjectId(id) },
-    {
-      $set: {
-        name,
-        type,
-        startTime,
-        endTime,
-        breakDuration,
-        workingDays,
-        isActive,
-        updatedAt: new Date()
+  try {
+    const shifts = await getCollection<Shift>('shifts')
+    
+    await shifts.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          name: data.name,
+          type: data.type,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          breakDuration: data.breakDuration,
+          graceMinutes: data.graceMinutes,
+          isActive: data.isActive,
+          updatedAt: new Date()
+        }
       }
-    }
-  )
+    )
 
-  revalidatePath('/dashboard/shifts')
-  return { success: true }
+    revalidatePath('/dashboard/shifts')
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating shift:', error)
+    return { success: false, error: 'Failed to update shift' }
+  }
 }
 
 export async function deleteShift(id: string) {
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured' }
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
-    return { error: 'Unauthorized' }
+    return { success: false, error: 'Unauthorized' }
   }
 
-  // Check if shift is assigned to employees
-  const employees = await getCollection('employees')
-  const hasEmployees = await employees.findOne({ shiftId: new ObjectId(id) })
-  if (hasEmployees) {
-    return { error: 'Cannot delete shift assigned to employees' }
+  try {
+    // Check if shift is assigned to employees
+    const employees = await getCollection('employees')
+    const hasEmployees = await employees.findOne({ shiftId: new ObjectId(id) })
+    if (hasEmployees) {
+      return { success: false, error: 'Cannot delete shift assigned to employees' }
+    }
+
+    const shifts = await getCollection<Shift>('shifts')
+    await shifts.deleteOne({ _id: new ObjectId(id) })
+
+    revalidatePath('/dashboard/shifts')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting shift:', error)
+    return { success: false, error: 'Failed to delete shift' }
   }
-
-  const shifts = await getCollection<Shift>('shifts')
-  await shifts.deleteOne({ _id: new ObjectId(id) })
-
-  revalidatePath('/dashboard/shifts')
-  return { success: true }
 }
 
 export async function getShifts() {
-  const shifts = await getCollection<Shift>('shifts')
-  const result = await shifts.find({}).sort({ name: 1 }).toArray()
-  
-  return result.map(s => ({
-    ...s,
-    _id: s._id?.toString()
-  }))
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured', data: [] }
+  }
+
+  try {
+    const shifts = await getCollection<Shift>('shifts')
+    const result = await shifts.find({}).sort({ name: 1 }).toArray()
+    
+    return {
+      success: true,
+      data: result.map(s => ({
+        ...s,
+        _id: s._id?.toString()
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching shifts:', error)
+    return { success: false, error: 'Failed to fetch shifts', data: [] }
+  }
 }
 
 export async function assignShift(employeeId: string, shiftId: string) {
-  const session = await getSession()
-  if (!session || !['admin', 'hr'].includes(session.user.role)) {
-    return { error: 'Unauthorized' }
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured' }
   }
 
-  const employees = await getCollection('employees')
-  
-  await employees.updateOne(
-    { _id: new ObjectId(employeeId) },
-    { $set: { shiftId: new ObjectId(shiftId), updatedAt: new Date() } }
-  )
+  const session = await getSession()
+  if (!session || !['admin', 'hr'].includes(session.user.role)) {
+    return { success: false, error: 'Unauthorized' }
+  }
 
-  revalidatePath('/dashboard/employees')
-  return { success: true }
+  try {
+    const employees = await getCollection('employees')
+    
+    await employees.updateOne(
+      { _id: new ObjectId(employeeId) },
+      { $set: { shiftId: new ObjectId(shiftId), updatedAt: new Date() } }
+    )
+
+    revalidatePath('/dashboard/employees')
+    return { success: true }
+  } catch (error) {
+    console.error('Error assigning shift:', error)
+    return { success: false, error: 'Failed to assign shift' }
+  }
 }

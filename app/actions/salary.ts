@@ -8,7 +8,7 @@ import type { Salary, Employee, Attendance, Leave } from '@/lib/types'
 export async function calculateSalary(userId: string, month: number, year: number) {
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
-    return { error: 'Unauthorized' }
+    return { success: false, error: 'Unauthorized' }
   }
 
   const employees = await getCollection<Employee>('employees')
@@ -16,19 +16,26 @@ export async function calculateSalary(userId: string, month: number, year: numbe
   const leaves = await getCollection<Leave>('leaves')
   const salaries = await getCollection<Salary>('salaries')
 
-  const employee = await employees.findOne({ userId: new ObjectId(userId) })
+  // Try to find employee by _id first, then by userId
+  let employee = await employees.findOne({ _id: new ObjectId(userId) })
   if (!employee) {
-    return { error: 'Employee not found' }
+    employee = await employees.findOne({ userId: new ObjectId(userId) })
   }
+  if (!employee) {
+    return { success: false, error: 'Employee not found. Make sure the employee has been onboarded.' }
+  }
+
+  // Use the employee's userId for attendance/leave lookups, or fallback to the passed id
+  const lookupUserId = employee.userId || new ObjectId(userId)
 
   // Check if salary already exists
   const existingSalary = await salaries.findOne({
-    userId: new ObjectId(userId),
+    userId: lookupUserId,
     month,
     year
   })
   if (existingSalary && existingSalary.status === 'paid') {
-    return { error: 'Salary already paid for this month' }
+    return { success: false, error: 'Salary already paid for this month' }
   }
 
   // Get attendance for the month
@@ -36,13 +43,13 @@ export async function calculateSalary(userId: string, month: number, year: numbe
   const endDate = new Date(year, month + 1, 0)
 
   const attendanceRecords = await attendance.find({
-    userId: new ObjectId(userId),
+    userId: lookupUserId,
     date: { $gte: startDate, $lte: endDate }
   }).toArray()
 
   // Get approved unpaid leaves
   const unpaidLeaves = await leaves.find({
-    userId: new ObjectId(userId),
+    userId: lookupUserId,
     leaveType: 'unpaid',
     status: 'approved',
     startDate: { $lte: endDate },
@@ -90,7 +97,7 @@ export async function calculateSalary(userId: string, month: number, year: numbe
   const netSalary = grossSalary - totalDeductions
 
   const salaryData: Partial<Salary> = {
-    userId: new ObjectId(userId),
+    userId: lookupUserId,
     month,
     year,
     basicSalary,
@@ -318,7 +325,7 @@ export async function generatePayslip(salaryId: string) {
   return {
     success: true,
     payslip: {
-      companyName: company?.name || 'Company',
+      companyName: 'Infobirth',
       employeeName: `${employee?.firstName} ${employee?.lastName}`,
       employeeCode: employee?.employeeCode,
       designation: employee?.designation,
