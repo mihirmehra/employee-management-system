@@ -39,7 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Plus, Search, MoreHorizontal, Eye, UserPlus, UserMinus, Loader2, Users } from 'lucide-react'
+import { Plus, Search, MoreHorizontal, Eye, UserPlus, UserMinus, UserCheck, Loader2, Users } from 'lucide-react'
 import { createUser } from '@/app/actions/auth'
 import { updateEmployeeStatus } from '@/app/actions/employees'
 import { toast } from 'sonner'
@@ -255,6 +255,12 @@ export function EmployeesClient({ employees, departments, teams, userRole }: Emp
                           <DropdownMenuItem onClick={() => handleStatusChange(employee._id, 'inactive')}>
                             <UserMinus className="mr-2 h-4 w-4" />
                             Complete Offboarding
+                          </DropdownMenuItem>
+                        )}
+                        {employee.status === 'inactive' && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(employee._id, 'active')}>
+                            <UserCheck className="mr-2 h-4 w-4" />
+                            Reactivate Employee
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

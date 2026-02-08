@@ -105,9 +105,9 @@ export default function LandingPage() {
               <Building2 className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="text-lg font-bold">EMS</span>
+              <span className="text-lg font-bold">Infobirth</span>
               <span className="ml-1 hidden text-sm text-muted-foreground sm:inline">
-                Employee Management System
+                Infobirth Innovations
               </span>
             </div>
           </div>
@@ -130,13 +130,13 @@ export default function LandingPage() {
         <div className="text-center">
           <div className="mb-6 inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <Shield className="mr-2 h-4 w-4" />
-            Secure & Reliable Employee Management
+            Infobirth Innovations - Employee Management
           </div>
           <h1 className="mx-auto max-w-4xl text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Complete Employee Management System for Your Business
+            Employee Management System by Infobirth Innovations
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-            Streamline your HR operations with our comprehensive EMS. Manage teams, track attendance 
+            Streamline your HR operations with Infobirth. Manage teams, track attendance 
             with geo-location, handle salaries, and boost productivity with task management.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -300,7 +300,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold">Ready to Get Started?</h2>
           <p className="mt-3 text-muted-foreground">
-            Set up your employee management system in minutes. Register as an admin to begin.
+            Set up your Infobirth employee management system in minutes. Register as an admin to begin.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button size="lg" asChild>
@@ -322,10 +322,10 @@ export default function LandingPage() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
-              <span className="font-semibold">EMS</span>
+              <span className="font-semibold">Infobirth</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Employee Management System - Built for modern businesses
+              Infobirth Innovations - Employee Management System
             </p>
           </div>
         </div>

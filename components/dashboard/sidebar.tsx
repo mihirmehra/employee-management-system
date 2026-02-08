@@ -89,8 +89,8 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
             <Building2 className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-sidebar-foreground">EMS</span>
-            <span className="text-xs text-sidebar-foreground/70">Employee Management</span>
+            <span className="text-sm font-semibold text-sidebar-foreground">Infobirth</span>
+            <span className="text-xs text-sidebar-foreground/70">Infobirth Innovations</span>
           </div>
         </Link>
       </SidebarHeader>

@@ -59,7 +59,7 @@ export default function LoginPage() {
             <Building2 className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your EMS account</CardDescription>
+          <CardDescription>Sign in to your Infobirth account</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (

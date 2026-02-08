@@ -9,8 +9,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'EMS - Employee Management System',
-  description: 'Comprehensive employee management system with team management, attendance tracking, salary management, and more',
+  title: 'Infobirth - Employee Management System',
+  description: 'Infobirth Innovations - Comprehensive employee management system with team management, attendance tracking, salary management, and more',
   generator: 'v0.app',
   icons: {
     icon: [

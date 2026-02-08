@@ -59,6 +59,45 @@ export default function AttendancePage() {
   const [dateFilter, setDateFilter] = useState<string>("");
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [checkInAddress, setCheckInAddress] = useState<string>('');
+  const [checkOutAddress, setCheckOutAddress] = useState<string>('');
+  const [loadingAddress, setLoadingAddress] = useState(false);
+
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+      const data = await res.json();
+      return data.address || 'Address not available';
+    } catch {
+      return 'Failed to load address';
+    }
+  };
+
+  const openLocationDialog = async (record: AttendanceRecord) => {
+    setSelectedRecord(record);
+    setCheckInAddress('');
+    setCheckOutAddress('');
+    setShowLocationDialog(true);
+    setLoadingAddress(true);
+
+    const promises: Promise<void>[] = [];
+
+    if (record.checkInLocation) {
+      promises.push(
+        reverseGeocode(record.checkInLocation.latitude, record.checkInLocation.longitude)
+          .then(addr => setCheckInAddress(addr))
+      );
+    }
+    if (record.checkOutLocation) {
+      promises.push(
+        reverseGeocode(record.checkOutLocation.latitude, record.checkOutLocation.longitude)
+          .then(addr => setCheckOutAddress(addr))
+      );
+    }
+
+    await Promise.all(promises);
+    setLoadingAddress(false);
+  };
 
   const filteredRecords = records?.filter((record) => {
     const matchesSearch =
@@ -291,10 +330,7 @@ export default function AttendancePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                setSelectedRecord(record);
-                                setShowLocationDialog(true);
-                              }}
+                              onClick={() => openLocationDialog(record)}
                             >
                               <Eye className="mr-1 h-4 w-4" />
                               View
@@ -330,21 +366,20 @@ export default function AttendancePage() {
               <div className="rounded-lg border p-4">
                 <h4 className="mb-2 font-medium text-success">Check-In Location</h4>
                 {selectedRecord.checkInLocation ? (
-                  <div className="space-y-2 text-sm">
-                    <p>
-                      <span className="text-muted-foreground">Latitude:</span>{" "}
-                      {selectedRecord.checkInLocation.latitude}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Longitude:</span>{" "}
-                      {selectedRecord.checkInLocation.longitude}
-                    </p>
-                    {selectedRecord.checkInLocation.address && (
-                      <p>
-                        <span className="text-muted-foreground">Address:</span>{" "}
-                        {selectedRecord.checkInLocation.address}
-                      </p>
-                    )}
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                      <div>
+                        {loadingAddress && !checkInAddress ? (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            Loading address...
+                          </div>
+                        ) : (
+                          <p className="leading-relaxed">{checkInAddress || 'Address not available'}</p>
+                        )}
+                      </div>
+                    </div>
                     <a
                       href={`https://www.google.com/maps?q=${selectedRecord.checkInLocation.latitude},${selectedRecord.checkInLocation.longitude}`}
                       target="_blank"
@@ -362,21 +397,20 @@ export default function AttendancePage() {
               <div className="rounded-lg border p-4">
                 <h4 className="mb-2 font-medium text-destructive">Check-Out Location</h4>
                 {selectedRecord.checkOutLocation ? (
-                  <div className="space-y-2 text-sm">
-                    <p>
-                      <span className="text-muted-foreground">Latitude:</span>{" "}
-                      {selectedRecord.checkOutLocation.latitude}
-                    </p>
-                    <p>
-                      <span className="text-muted-foreground">Longitude:</span>{" "}
-                      {selectedRecord.checkOutLocation.longitude}
-                    </p>
-                    {selectedRecord.checkOutLocation.address && (
-                      <p>
-                        <span className="text-muted-foreground">Address:</span>{" "}
-                        {selectedRecord.checkOutLocation.address}
-                      </p>
-                    )}
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                      <div>
+                        {loadingAddress && !checkOutAddress ? (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            Loading address...
+                          </div>
+                        ) : (
+                          <p className="leading-relaxed">{checkOutAddress || 'Address not available'}</p>
+                        )}
+                      </div>
+                    </div>
                     <a
                       href={`https://www.google.com/maps?q=${selectedRecord.checkOutLocation.latitude},${selectedRecord.checkOutLocation.longitude}`}
                       target="_blank"

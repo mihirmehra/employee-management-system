@@ -33,7 +33,7 @@ export default function RegisterPage() {
             <Building2 className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">Setup Admin Account</CardTitle>
-          <CardDescription>Create your organization's first admin account</CardDescription>
+          <CardDescription>Create your Infobirth Innovations admin account</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
