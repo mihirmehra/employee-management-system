@@ -53,8 +53,8 @@ import {
   createShift,
   updateShift,
   deleteShift,
-  type Shift,
 } from "@/app/actions/shifts";
+import type { Shift } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const shiftsFetcher = async () => {

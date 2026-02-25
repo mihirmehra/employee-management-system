@@ -6,7 +6,7 @@ export type SalaryType = 'fixed' | 'hourly'
 export type LeaveStatus = 'pending' | 'approved' | 'rejected'
 export type TaskStatus = 'backlog' | 'todo' | 'in-progress' | 'review' | 'done'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
-export type ShiftType = 'morning' | 'afternoon' | 'night' | 'flexible'
+export type ShiftType = 'morning' | 'day' | 'evening' | 'night' | 'rotational'
 
 export interface User {
   _id?: ObjectId
@@ -213,6 +213,7 @@ export interface Shift {
   startTime: string
   endTime: string
   breakDuration: number
+  graceMinutes: number
   workingDays: number[]
   isActive: boolean
   createdAt: Date
@@ -226,6 +227,7 @@ export interface Asset {
   serialNumber?: string
   purchaseDate?: Date
   purchasePrice?: number
+  condition?: 'new' | 'good' | 'fair' | 'poor'
   assignedTo?: ObjectId
   assignedAt?: Date
   status: 'available' | 'assigned' | 'maintenance' | 'retired'

@@ -20,17 +20,17 @@ interface DashboardChartsProps {
 
 export function DashboardCharts({ attendanceStats, tasks }: DashboardChartsProps) {
   const taskData = [
-    { name: 'To Do', value: tasks.todo, fill: 'hsl(var(--chart-1))' },
-    { name: 'In Progress', value: tasks.inProgress, fill: 'hsl(var(--chart-2))' },
-    { name: 'Review', value: tasks.review, fill: 'hsl(var(--chart-4))' },
-    { name: 'Done', value: tasks.done, fill: 'hsl(var(--success))' },
+    { name: 'To Do', value: tasks.todo, fill: 'var(--chart-1)' },
+    { name: 'In Progress', value: tasks.inProgress, fill: 'var(--chart-2)' },
+    { name: 'Review', value: tasks.review, fill: 'var(--chart-4)' },
+    { name: 'Done', value: tasks.done, fill: 'var(--success)' },
   ]
 
   const attendanceData = attendanceStats ? [
-    { name: 'Present', value: attendanceStats.present, fill: 'hsl(var(--success))' },
-    { name: 'Late', value: attendanceStats.late, fill: 'hsl(var(--warning))' },
-    { name: 'On Leave', value: attendanceStats.onLeave, fill: 'hsl(var(--chart-1))' },
-    { name: 'Absent', value: attendanceStats.absent, fill: 'hsl(var(--destructive))' },
+    { name: 'Present', value: attendanceStats.present, fill: 'var(--success)' },
+    { name: 'Late', value: attendanceStats.late, fill: 'var(--warning)' },
+    { name: 'On Leave', value: attendanceStats.onLeave, fill: 'var(--chart-1)' },
+    { name: 'Absent', value: attendanceStats.absent, fill: 'var(--destructive)' },
   ] : []
 
   return (
@@ -43,9 +43,10 @@ export function DashboardCharts({ attendanceStats, tasks }: DashboardChartsProps
             <YAxis fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: 'hsl(var(--popover))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px'
+                backgroundColor: 'var(--popover)', 
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                color: 'var(--popover-foreground)'
               }}
             />
             <Bar dataKey="value" radius={[4, 4, 0, 0]} />
@@ -62,9 +63,10 @@ export function DashboardCharts({ attendanceStats, tasks }: DashboardChartsProps
               <YAxis fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'hsl(var(--popover))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  backgroundColor: 'var(--popover)', 
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  color: 'var(--popover-foreground)'
                 }}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} />

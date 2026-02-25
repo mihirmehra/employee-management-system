@@ -5,8 +5,6 @@ import { getCollection, ObjectId, isMongoConfigured } from '@/lib/mongodb'
 import { getSession } from '@/lib/auth'
 import type { Employee, User } from '@/lib/types'
 
-export type { Employee }
-
 export async function getEmployees(filters?: {
   teamId?: string
   departmentId?: string

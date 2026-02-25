@@ -5,8 +5,6 @@ import { getCollection, ObjectId, isMongoConfigured } from '@/lib/mongodb'
 import { getSession } from '@/lib/auth'
 import type { Team, Department } from '@/lib/types'
 
-export type { Team, Department }
-
 export async function getDepartments() {
   try {
     if (!isMongoConfigured()) {

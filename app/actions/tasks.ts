@@ -5,8 +5,6 @@ import { getCollection, ObjectId, isMongoConfigured } from '@/lib/mongodb'
 import { getSession } from '@/lib/auth'
 import type { Task } from '@/lib/types'
 
-export type { Task }
-
 export async function createTask(data: {
   title: string
   description?: string

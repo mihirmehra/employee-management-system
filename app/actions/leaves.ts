@@ -6,6 +6,8 @@ import { getSession } from '@/lib/auth'
 import type { Leave, LeaveBalance } from '@/lib/types'
 
 export async function applyLeave(formData: FormData) {
+  if (!isMongoConfigured()) return { error: 'Database not configured' }
+
   const session = await getSession()
   if (!session) {
     return { error: 'Unauthorized' }

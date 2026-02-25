@@ -135,7 +135,7 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const pendingOnboarding = employees?.filter((e) => e.status === "pending") || [];
+  const pendingOnboarding = employees?.filter((e) => e.status === "onboarding") || [];
   const activeEmployees = employees?.filter((e) => e.status === "active") || [];
   const offboardingEmployees = employees?.filter((e) => e.status === "offboarding") || [];
   const inactiveEmployees = employees?.filter((e) => e.status === "inactive") || [];

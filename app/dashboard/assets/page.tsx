@@ -64,14 +64,15 @@ import { format, parseISO } from "date-fns";
 interface Asset {
   _id?: string;
   name: string;
-  assetCode: string;
   type: string;
+  serialNumber?: string;
   assignedTo?: string;
-  assigneeName?: string;
   status: string;
   purchaseDate?: string;
-  warrantyExpiry?: string;
+  purchasePrice?: number;
+  condition?: 'new' | 'good' | 'fair' | 'poor';
   notes?: string;
+  employee?: { firstName: string; lastName: string };
 }
 
 interface Employee {

@@ -68,22 +68,49 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSaveCompany = async () => {
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.company) {
+            setCompanySettings(prev => ({ ...prev, ...data.company }))
+          }
+          if (data.work) {
+            setWorkSettings(prev => ({ ...prev, ...data.work }))
+          }
+          if (data.leaves) {
+            setLeaveSettings(prev => ({ ...prev, ...data.leaves }))
+          }
+          if (data.notifications) {
+            setNotifications(prev => ({ ...prev, ...data.notifications }))
+          }
+        }
+      } catch {
+        // Settings not loaded, use defaults
+      }
+    }
+    loadSettings()
+  }, [])
+
+  const saveSettings = async (type: string, data: Record<string, unknown>) => {
     setIsSaving(true)
-    // Save to settings collection
     try {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'company', ...companySettings })
+        body: JSON.stringify({ type, ...data })
       })
       if (res.ok) {
         toast({
           title: 'Settings Saved',
-          description: 'Company settings have been updated'
+          description: `${type.charAt(0).toUpperCase() + type.slice(1)} settings have been updated`
         })
+      } else {
+        throw new Error('Failed')
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to save settings',
@@ -92,6 +119,12 @@ export default function SettingsPage() {
     }
     setIsSaving(false)
   }
+
+  const handleSaveCompany = () => saveSettings('company', companySettings)
+  const handleSaveWork = () => saveSettings('work', workSettings)
+  const handleSaveLeaves = () => saveSettings('leaves', leaveSettings)
+  const handleSavePayroll = () => saveSettings('payroll', {})
+  const handleSaveNotifications = () => saveSettings('notifications', notifications)
 
   return (
     <div className="space-y-6">
@@ -263,9 +296,9 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <Button>
+                <Button onClick={handleSaveWork} disabled={isSaving}>
                   <Save className="mr-2 h-4 w-4" />
-                  Save Work Settings
+                  {isSaving ? 'Saving...' : 'Save Work Settings'}
                 </Button>
               </div>
             </CardContent>
@@ -330,9 +363,9 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="sm:col-span-2 lg:col-span-3">
-                <Button>
+                <Button onClick={handleSaveLeaves} disabled={isSaving}>
                   <Save className="mr-2 h-4 w-4" />
-                  Save Leave Settings
+                  {isSaving ? 'Saving...' : 'Save Leave Settings'}
                 </Button>
               </div>
             </CardContent>
@@ -379,9 +412,9 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              <Button>
+              <Button onClick={handleSavePayroll} disabled={isSaving}>
                 <Save className="mr-2 h-4 w-4" />
-                Save Payroll Settings
+                {isSaving ? 'Saving...' : 'Save Payroll Settings'}
               </Button>
             </CardContent>
           </Card>
@@ -434,9 +467,9 @@ export default function SettingsPage() {
                   onCheckedChange={(checked) => setNotifications({ ...notifications, emailOnTaskAssigned: checked })}
                 />
               </div>
-              <Button>
+              <Button onClick={handleSaveNotifications} disabled={isSaving}>
                 <Save className="mr-2 h-4 w-4" />
-                Save Notification Settings
+                {isSaving ? 'Saving...' : 'Save Notification Settings'}
               </Button>
             </CardContent>
           </Card>

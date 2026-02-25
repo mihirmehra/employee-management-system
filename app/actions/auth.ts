@@ -218,6 +218,36 @@ export async function getCurrentUser() {
   return user
 }
 
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const session = await getSession()
+  if (!session) return { error: 'Not logged in' }
+
+  if (!currentPassword || !newPassword) {
+    return { error: 'Both current and new password are required' }
+  }
+
+  if (newPassword.length < 6) {
+    return { error: 'New password must be at least 6 characters' }
+  }
+
+  const users = await getCollection<User>('users')
+  const user = await users.findOne({ _id: session.user._id })
+  if (!user) return { error: 'User not found' }
+
+  const isValid = await verifyPassword(currentPassword, user.password)
+  if (!isValid) {
+    return { error: 'Current password is incorrect' }
+  }
+
+  const hashedPassword = await hashPassword(newPassword)
+  await users.updateOne(
+    { _id: session.user._id },
+    { $set: { password: hashedPassword, updatedAt: new Date() } }
+  )
+
+  return { success: true }
+}
+
 export async function checkoutUser() {
   const session = await getSession()
   if (!session) return { error: 'Not logged in' }

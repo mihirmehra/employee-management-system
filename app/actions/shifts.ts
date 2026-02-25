@@ -5,17 +5,18 @@ import { getCollection, ObjectId, isMongoConfigured } from '@/lib/mongodb'
 import { getSession } from '@/lib/auth'
 import type { Shift } from '@/lib/types'
 
-export type { Shift }
-
-export async function createShift(data: {
+interface ShiftInput {
   name: string
   type: Shift['type']
   startTime: string
   endTime: string
   breakDuration: number
   graceMinutes: number
-  isActive: boolean
-}) {
+  workingDays: number[]
+  isActive?: boolean
+}
+
+export async function createShift(data: ShiftInput) {
   if (!isMongoConfigured()) {
     return { success: false, error: 'Database not configured' }
   }
@@ -34,16 +35,16 @@ export async function createShift(data: {
     
     await shifts.insertOne({
       name: data.name,
-      type: data.type || 'day',
+      type: data.type || 'morning',
       startTime: data.startTime,
       endTime: data.endTime,
       breakDuration: data.breakDuration || 60,
       graceMinutes: data.graceMinutes || 15,
-      workingDays: [1, 2, 3, 4, 5],
+      workingDays: data.workingDays?.length > 0 ? data.workingDays : [1, 2, 3, 4, 5],
       isActive: data.isActive !== false,
       createdAt: new Date(),
       updatedAt: new Date()
-    } as Shift)
+    })
 
     revalidatePath('/dashboard/shifts')
     return { success: true }
@@ -53,15 +54,7 @@ export async function createShift(data: {
   }
 }
 
-export async function updateShift(id: string, data: {
-  name: string
-  type: Shift['type']
-  startTime: string
-  endTime: string
-  breakDuration: number
-  graceMinutes: number
-  isActive: boolean
-}) {
+export async function updateShift(id: string, data: ShiftInput) {
   if (!isMongoConfigured()) {
     return { success: false, error: 'Database not configured' }
   }
@@ -84,7 +77,8 @@ export async function updateShift(id: string, data: {
           endTime: data.endTime,
           breakDuration: data.breakDuration,
           graceMinutes: data.graceMinutes,
-          isActive: data.isActive,
+          workingDays: data.workingDays,
+          isActive: data.isActive !== false,
           updatedAt: new Date()
         }
       }
@@ -129,20 +123,19 @@ export async function deleteShift(id: string) {
 
 export async function getShifts() {
   if (!isMongoConfigured()) {
-    return { success: false, error: 'Database not configured', data: [] }
+    return { success: true, data: [] }
   }
 
   try {
     const shifts = await getCollection<Shift>('shifts')
     const result = await shifts.find({}).sort({ name: 1 }).toArray()
     
-    return {
-      success: true,
-      data: result.map(s => ({
-        ...s,
-        _id: s._id?.toString()
-      }))
-    }
+    const data = result.map(s => ({
+      ...s,
+      _id: s._id?.toString()
+    }))
+
+    return { success: true, data }
   } catch (error) {
     console.error('Error fetching shifts:', error)
     return { success: false, error: 'Failed to fetch shifts', data: [] }

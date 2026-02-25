@@ -54,11 +54,11 @@ const mainNavItems = [
   { title: 'Attendance', href: '/dashboard/attendance', icon: Clock },
   { title: 'Leaves', href: '/dashboard/leaves', icon: CalendarDays },
   { title: 'Tasks', href: '/dashboard/tasks', icon: ListTodo },
+  { title: 'Payslips', href: '/dashboard/payslips', icon: FileText },
 ]
 
 const managementNavItems = [
   { title: 'Salary', href: '/dashboard/salary', icon: DollarSign, roles: ['admin', 'hr'] },
-  { title: 'Payslips', href: '/dashboard/payslips', icon: FileText, roles: ['admin', 'hr'] },
   { title: 'Assets', href: '/dashboard/assets', icon: Laptop, roles: ['admin', 'hr'] },
   { title: 'Shifts', href: '/dashboard/shifts', icon: Calendar, roles: ['admin', 'hr'] },
   { title: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin', 'hr'] },

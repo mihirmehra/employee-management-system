@@ -72,9 +72,15 @@ interface AttendanceRecord {
 interface SalaryRecord {
   _id?: string;
   employeeName: string;
+  employeeCode: string;
   month: string;
+  basicSalary: number;
+  grossSalary: number;
   netSalary: number;
+  totalAllowances: number;
   totalDeductions: number;
+  status: string;
+  salaryType: string;
 }
 
 interface LeaveRequest {
@@ -121,11 +127,11 @@ const teamsFetcher = async () => {
 };
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
 ];
 
 export default function ReportsPage() {
@@ -160,8 +166,9 @@ export default function ReportsPage() {
   // Salary distribution by department
   const salaryByTeam = teams?.map((team) => {
     const teamEmployees = employees?.filter((e) => e.teamId === team._id) || [];
+    const teamEmployeeNames = new Set(teamEmployees.map((e) => `${e.firstName} ${e.lastName}`));
     const teamSalaries = salary?.filter((s) =>
-      teamEmployees.some((e) => e._id === s.employeeId)
+      teamEmployeeNames.has(s.employeeName)
     ) || [];
     const totalSalary = teamSalaries.reduce((sum, s) => sum + s.netSalary, 0);
     return {
@@ -418,9 +425,9 @@ export default function ReportsPage() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="present" fill="hsl(var(--success))" name="Present" />
-                      <Bar dataKey="absent" fill="hsl(var(--destructive))" name="Absent" />
-                      <Bar dataKey="late" fill="hsl(var(--warning))" name="Late" />
+                      <Bar dataKey="present" fill="var(--success)" name="Present" />
+                      <Bar dataKey="absent" fill="var(--destructive)" name="Absent" />
+                      <Bar dataKey="late" fill="var(--warning)" name="Late" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -446,7 +453,7 @@ export default function ReportsPage() {
                       <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
                       <YAxis dataKey="name" type="category" width={100} />
                       <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                      <Bar dataKey="salary" fill="hsl(var(--primary))" />
+                      <Bar dataKey="salary" fill="var(--primary)" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -517,21 +524,21 @@ export default function ReportsPage() {
                     <Line
                       type="monotone"
                       dataKey="present"
-                      stroke="hsl(var(--success))"
+                      stroke="var(--success)"
                       strokeWidth={2}
                       name="Present"
                     />
                     <Line
                       type="monotone"
                       dataKey="absent"
-                      stroke="hsl(var(--destructive))"
+                      stroke="var(--destructive)"
                       strokeWidth={2}
                       name="Absent"
                     />
                     <Line
                       type="monotone"
                       dataKey="late"
-                      stroke="hsl(var(--warning))"
+                      stroke="var(--warning)"
                       strokeWidth={2}
                       name="Late"
                     />
@@ -568,21 +575,21 @@ export default function ReportsPage() {
                     <Line
                       type="monotone"
                       dataKey="gross"
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--primary)"
                       strokeWidth={2}
                       name="Gross Salary"
                     />
                     <Line
                       type="monotone"
                       dataKey="net"
-                      stroke="hsl(var(--success))"
+                      stroke="var(--success)"
                       strokeWidth={2}
                       name="Net Salary"
                     />
                     <Line
                       type="monotone"
                       dataKey="deductions"
-                      stroke="hsl(var(--destructive))"
+                      stroke="var(--destructive)"
                       strokeWidth={2}
                       name="Deductions"
                     />

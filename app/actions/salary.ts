@@ -1,14 +1,18 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { getCollection, ObjectId } from '@/lib/mongodb'
+import { getCollection, ObjectId, isMongoConfigured } from '@/lib/mongodb'
 import { getSession } from '@/lib/auth'
 import type { Salary, Employee, Attendance, Leave } from '@/lib/types'
 
 export async function calculateSalary(userId: string, month: number, year: number) {
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured' }
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
-    return { success: false, error: 'Unauthorized' }
+    return { error: 'Unauthorized' }
   }
 
   const employees = await getCollection<Employee>('employees')
@@ -16,26 +20,19 @@ export async function calculateSalary(userId: string, month: number, year: numbe
   const leaves = await getCollection<Leave>('leaves')
   const salaries = await getCollection<Salary>('salaries')
 
-  // Try to find employee by _id first, then by userId
-  let employee = await employees.findOne({ _id: new ObjectId(userId) })
+  const employee = await employees.findOne({ userId: new ObjectId(userId) })
   if (!employee) {
-    employee = await employees.findOne({ userId: new ObjectId(userId) })
+    return { error: 'Employee not found' }
   }
-  if (!employee) {
-    return { success: false, error: 'Employee not found. Make sure the employee has been onboarded.' }
-  }
-
-  // Use the employee's userId for attendance/leave lookups, or fallback to the passed id
-  const lookupUserId = employee.userId || new ObjectId(userId)
 
   // Check if salary already exists
   const existingSalary = await salaries.findOne({
-    userId: lookupUserId,
+    userId: new ObjectId(userId),
     month,
     year
   })
   if (existingSalary && existingSalary.status === 'paid') {
-    return { success: false, error: 'Salary already paid for this month' }
+    return { error: 'Salary already paid for this month' }
   }
 
   // Get attendance for the month
@@ -43,13 +40,13 @@ export async function calculateSalary(userId: string, month: number, year: numbe
   const endDate = new Date(year, month + 1, 0)
 
   const attendanceRecords = await attendance.find({
-    userId: lookupUserId,
+    userId: new ObjectId(userId),
     date: { $gte: startDate, $lte: endDate }
   }).toArray()
 
   // Get approved unpaid leaves
   const unpaidLeaves = await leaves.find({
-    userId: lookupUserId,
+    userId: new ObjectId(userId),
     leaveType: 'unpaid',
     status: 'approved',
     startDate: { $lte: endDate },
@@ -97,7 +94,7 @@ export async function calculateSalary(userId: string, month: number, year: numbe
   const netSalary = grossSalary - totalDeductions
 
   const salaryData: Partial<Salary> = {
-    userId: lookupUserId,
+    userId: new ObjectId(userId),
     month,
     year,
     basicSalary,
@@ -139,6 +136,8 @@ export async function calculateSalary(userId: string, month: number, year: numbe
 }
 
 export async function processSalary(id: string) {
+  if (!isMongoConfigured()) return { error: 'Database not configured' }
+
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
     return { error: 'Unauthorized' }
@@ -156,6 +155,8 @@ export async function processSalary(id: string) {
 }
 
 export async function markSalaryPaid(id: string) {
+  if (!isMongoConfigured()) return { error: 'Database not configured' }
+
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
     return { error: 'Unauthorized' }
@@ -173,6 +174,8 @@ export async function markSalaryPaid(id: string) {
 }
 
 export async function getSalaries(month?: number, year?: number) {
+  if (!isMongoConfigured()) return []
+
   const session = await getSession()
   if (!session) return []
 
@@ -202,6 +205,8 @@ export async function getSalaries(month?: number, year?: number) {
 }
 
 export async function getMySalaries() {
+  if (!isMongoConfigured()) return []
+
   const session = await getSession()
   if (!session) return []
 
@@ -236,6 +241,8 @@ export interface SalaryRecord {
 }
 
 export async function getSalaryRecords(month?: string) {
+  if (!isMongoConfigured()) return { success: false, error: 'Database not configured', data: [] }
+
   const session = await getSession()
   if (!session) {
     return { success: false, error: 'Unauthorized', data: [] }
@@ -286,16 +293,35 @@ export async function getSalaryRecords(month?: string) {
 }
 
 export async function calculateSalaryByMonth(employeeId: string, month: string) {
+  if (!isMongoConfigured()) {
+    return { success: false, error: 'Database not configured' }
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'hr'].includes(session.user.role)) {
     return { success: false, error: 'Unauthorized' }
   }
 
-  const [year, monthNum] = month.split('-').map(Number)
-  return calculateSalary(employeeId, monthNum - 1, year)
+  try {
+    // employeeId here is the employee record _id, we need to look up the userId
+    const employees = await getCollection<Employee>('employees')
+    const employee = await employees.findOne({ _id: new ObjectId(employeeId) })
+    
+    if (!employee) {
+      return { success: false, error: 'Employee not found' }
+    }
+
+    const [year, monthNum] = month.split('-').map(Number)
+    return calculateSalary(employee.userId.toString(), monthNum - 1, year)
+  } catch (error) {
+    console.error('Error calculating salary by month:', error)
+    return { success: false, error: 'Failed to calculate salary' }
+  }
 }
 
 export async function generatePayslip(salaryId: string) {
+  if (!isMongoConfigured()) return { success: false, error: 'Database not configured' }
+
   const session = await getSession()
   if (!session) {
     return { error: 'Unauthorized' }
@@ -325,7 +351,7 @@ export async function generatePayslip(salaryId: string) {
   return {
     success: true,
     payslip: {
-      companyName: 'Infobirth',
+      companyName: company?.name || 'Company',
       employeeName: `${employee?.firstName} ${employee?.lastName}`,
       employeeCode: employee?.employeeCode,
       designation: employee?.designation,
