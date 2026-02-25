@@ -113,12 +113,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">First time setup? </span>
-            <Link href="/register" className="text-primary hover:underline">
-              Register as Admin
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

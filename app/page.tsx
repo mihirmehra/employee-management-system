@@ -115,12 +115,6 @@ export default function LandingPage() {
             <Button variant="ghost" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
-            <Button asChild>
-              <Link href="/register">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
           </div>
         </div>
       </header>
